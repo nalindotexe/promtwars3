@@ -6,6 +6,7 @@ Author: Expert Streamlit Developer
 import streamlit as st
 import pandas as pd
 import textwrap
+import html  # Added for XSS protection
 from src.calculator import CarbonEngine
 from src.assistant import EcoAssistant
 
@@ -221,10 +222,13 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Initialize Backend Engines safely
+# Initialize Backend Engines securely and efficiently
+@st.cache_resource
+def load_engines():
+    return CarbonEngine(), EcoAssistant()
+
 try:
-    engine = CarbonEngine()
-    assistant = EcoAssistant()
+    engine, assistant = load_engines()
 except Exception as e:
     st.error(f"Failed to initialize calculation engines: {str(e)}")
     st.stop()
@@ -379,8 +383,12 @@ with col_metrics:
         "Emissions (kg CO₂)": [breakdown["commute"], breakdown["diet"], breakdown["energy"]]
     })
     
-    # Simple table display using clean Streamlit layout
-    st.table(breakdown_data)
+    # Replaced st.table with a visually appealing, interactive bar chart
+    st.bar_chart(
+        data=breakdown_data.set_index("Category"), 
+        color="#05c46b",
+        height=250
+    )
 
 
 with col_actions:
@@ -391,6 +399,13 @@ with col_actions:
         cat = rec["category"].lower()
         impact = rec["impact_level"].lower()
         
+        # Security: Escape HTML strings to prevent XSS vulnerabilities
+        safe_category = html.escape(str(rec['category']))
+        safe_impact = html.escape(str(rec['impact_level']))
+        safe_title = html.escape(str(rec['title']))
+        safe_desc = html.escape(str(rec['description']))
+        safe_savings = float(rec['potential_savings'])
+        
         # Select appropriate badge classes
         cat_badge_class = f"badge-{cat}" if cat in ["commute", "diet", "energy"] else "badge-general"
         impact_badge_class = f"badge-{impact}"
@@ -400,14 +415,14 @@ with col_actions:
             <div class="rec-card">
                 <div class="rec-header">
                     <div>
-                        <span class="badge {cat_badge_class}">{rec['category']}</span>
-                        <span class="badge {impact_badge_class}">{rec['impact_level']} Impact</span>
+                        <span class="badge {cat_badge_class}">{safe_category}</span>
+                        <span class="badge {impact_badge_class}">{safe_impact} Impact</span>
                     </div>
                 </div>
-                <div class="rec-title">{rec['title']}</div>
-                <div class="rec-desc">{rec['description']}</div>
+                <div class="rec-title">{safe_title}</div>
+                <div class="rec-desc">{safe_desc}</div>
                 <div class="rec-savings">
-                    🌍 Estimated Savings: <strong>{rec['potential_savings']:.2f} kg CO₂/day</strong>
+                    🌍 Estimated Savings: <strong>{safe_savings:.2f} kg CO₂/day</strong>
                 </div>
             </div>
             """,
