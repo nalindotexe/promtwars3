@@ -6,7 +6,8 @@ Author: Expert Streamlit Developer
 import streamlit as st
 import pandas as pd
 import textwrap
-import html  # Added for XSS protection
+import html
+import os
 from src.calculator import CarbonEngine
 from src.assistant import EcoAssistant
 
@@ -18,209 +19,16 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom Premium Styling & Typography
-st.markdown(
-    """
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+# Load External CSS for Clean Architecture
+def load_css(file_name: str):
+    """Loads external CSS to maintain clean Python architecture."""
+    if os.path.exists(file_name):
+        with open(file_name) as f:
+            st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+    else:
+        st.warning(f"Styling file {file_name} not found.")
 
-    /* Global Typography */
-    html, body, [data-testid="stAppViewContainer"], [data-testid="stHeader"] {
-        background-color: #0b0c10;
-        color: #e2e8f0;
-        font-family: 'Outfit', sans-serif !important;
-    }
-
-    /* Sidebar Customization */
-    [data-testid="stSidebar"] {
-        background-color: #0f131a;
-        border-right: 1px solid rgba(255, 255, 255, 0.05);
-        padding-top: 2rem;
-    }
-    .sidebar-header {
-        font-size: 1.4rem;
-        font-weight: 700;
-        color: #00b894;
-        margin-bottom: 1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    /* Glassmorphic Container/Card */
-    .dashboard-card {
-        background: rgba(30, 41, 59, 0.45);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 16px;
-        padding: 24px;
-        box-shadow: 0 12px 32px 0 rgba(0, 0, 0, 0.25);
-        backdrop-filter: blur(12px);
-        margin-bottom: 24px;
-        transition: transform 0.2s ease, border-color 0.2s ease;
-    }
-    .dashboard-card:hover {
-        transform: translateY(-2px);
-        border-color: rgba(5, 196, 107, 0.3);
-    }
-
-    /* KPI Metrics Styling */
-    .kpi-title {
-        font-size: 0.9rem;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        color: #94a3b8;
-        font-weight: 500;
-    }
-    .kpi-value {
-        font-size: 2.8rem;
-        font-weight: 700;
-        line-height: 1.1;
-        margin: 8px 0;
-        background: linear-gradient(90deg, #05c46b, #00d2d3);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-    .kpi-subtitle {
-        font-size: 0.85rem;
-        color: #64748b;
-    }
-
-    /* Recommendation Card Styling */
-    .rec-card {
-        background: rgba(24, 32, 48, 0.6);
-        border-left: 5px solid #05c46b;
-        border-top: 1px solid rgba(255, 255, 255, 0.05);
-        border-right: 1px solid rgba(255, 255, 255, 0.05);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        border-radius: 6px 16px 16px 6px;
-        padding: 22px;
-        margin-bottom: 18px;
-        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
-        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    }
-    .rec-card:hover {
-        border-left-width: 8px;
-        background: rgba(30, 41, 59, 0.7);
-        transform: translateX(4px);
-    }
-    .rec-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 12px;
-    }
-    .rec-title {
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: #f8fafc;
-    }
-    .rec-desc {
-        font-size: 0.95rem;
-        color: #cbd5e1;
-        line-height: 1.5;
-        margin-bottom: 14px;
-    }
-    .rec-savings {
-        font-size: 0.9rem;
-        font-weight: 600;
-        color: #00d2d3;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-
-    /* Custom Badges */
-    .badge {
-        display: inline-block;
-        padding: 3px 10px;
-        border-radius: 9999px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    .badge-commute {
-        background: rgba(54, 162, 235, 0.15);
-        color: #36a2eb;
-        border: 1px solid rgba(54, 162, 235, 0.3);
-    }
-    .badge-diet {
-        background: rgba(255, 159, 64, 0.15);
-        color: #ff9f40;
-        border: 1px solid rgba(255, 159, 64, 0.3);
-    }
-    .badge-energy {
-        background: rgba(255, 205, 86, 0.15);
-        color: #ffcd56;
-        border: 1px solid rgba(255, 205, 86, 0.3);
-    }
-    .badge-general {
-        background: rgba(153, 102, 255, 0.15);
-        color: #9966ff;
-        border: 1px solid rgba(153, 102, 255, 0.3);
-    }
-
-    .badge-high {
-        background: rgba(239, 68, 68, 0.15);
-        color: #ef4444;
-        border: 1px solid rgba(239, 68, 68, 0.3);
-    }
-    .badge-medium {
-        background: rgba(245, 158, 11, 0.15);
-        color: #f59e0b;
-        border: 1px solid rgba(245, 158, 11, 0.3);
-    }
-    .badge-low {
-        background: rgba(16, 185, 129, 0.15);
-        color: #10b981;
-        border: 1px solid rgba(16, 185, 129, 0.3);
-    }
-
-    /* Comparison Bar Chart */
-    .compare-container {
-        margin-top: 15px;
-    }
-    .bar-label {
-        font-size: 0.85rem;
-        color: #94a3b8;
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 4px;
-    }
-    .bar-bg {
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 9999px;
-        height: 10px;
-        overflow: hidden;
-        margin-bottom: 12px;
-    }
-    .bar-fill {
-        height: 100%;
-        border-radius: 9999px;
-    }
-
-    /* Decorative header gradient */
-    .hero-banner {
-        padding: 2.5rem 0 1.5rem 0;
-    }
-    .hero-title {
-        font-size: 3rem;
-        font-weight: 800;
-        background: linear-gradient(135deg, #05c46b 0%, #00d2d3 50%, #9966ff 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        letter-spacing: -1px;
-        margin-bottom: 0px;
-    }
-    .hero-subtitle {
-        font-size: 1.1rem;
-        color: #94a3b8;
-        margin-top: 0px;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+load_css("style.css")
 
 # Initialize Backend Engines securely and efficiently
 @st.cache_resource
@@ -232,6 +40,20 @@ try:
 except Exception as e:
     st.error(f"Failed to initialize calculation engines: {str(e)}")
     st.stop()
+
+# ----------------- CACHED LOGIC ENGINE -----------------
+@st.cache_data
+def get_dashboard_data(_engine, _assistant, inputs: dict):
+    """Caches calculations to prevent redundant processing on UI re-renders."""
+    breakdown = _engine.calculate_total_daily_emissions(inputs)
+    recommendations = _assistant.generate_recommendations(inputs, breakdown)
+    
+    breakdown_data = pd.DataFrame({
+        "Category": ["Commute", "Diet", "Energy"],
+        "Emissions (kg CO₂)": [breakdown["commute"], breakdown["diet"], breakdown["energy"]]
+    })
+    
+    return breakdown, recommendations, breakdown_data
 
 # ----------------- SIDEBAR: ONBOARDING QUIZ -----------------
 st.sidebar.markdown(
@@ -308,10 +130,9 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Process Calculations
+# Process Calculations via the cached engine
 try:
-    breakdown = engine.calculate_total_daily_emissions(user_inputs)
-    recommendations = assistant.generate_recommendations(user_inputs, breakdown)
+    breakdown, recommendations, breakdown_data = get_dashboard_data(engine, assistant, user_inputs)
 except Exception as e:
     st.error(f"Error executing emissions engine logic: {str(e)}")
     st.stop()
@@ -333,11 +154,10 @@ with col_metrics:
     )
 
     # 2. National & Target Comparisons
-    # Baseline benchmark: US average = 16.0 kg/day, Global average target = 5.0 kg/day.
     us_avg = 16.0
     global_target = 5.0
     
-    # Calculate percentages for comparison bars (clamp between 2% and 100% for aesthetic render)
+    # Calculate percentages for comparison bars
     user_pct = min(100.0, max(2.0, (breakdown['total'] / us_avg) * 100.0))
     us_pct = 100.0
     target_pct = min(100.0, max(2.0, (global_target / us_avg) * 100.0))
@@ -376,14 +196,8 @@ with col_metrics:
         unsafe_allow_html=True
     )
 
-    # 3. Emissions Breakdown Breakdown
+    # 3. Emissions Breakdown Chart
     st.markdown("### Category Distribution")
-    breakdown_data = pd.DataFrame({
-        "Category": ["Commute", "Diet", "Energy"],
-        "Emissions (kg CO₂)": [breakdown["commute"], breakdown["diet"], breakdown["energy"]]
-    })
-    
-    # Replaced st.table with a visually appealing, interactive bar chart
     st.bar_chart(
         data=breakdown_data.set_index("Category"), 
         color="#05c46b",
