@@ -8,7 +8,7 @@ from src.calculator import CarbonEngine
 from src.assistant import EcoAssistant
 
 
-def test_calculator_emissions():
+def test_calculator_emissions() -> None:
     """Validates that CarbonEngine outputs correct mathematical calculations for basic profiles."""
     engine = CarbonEngine()
 
@@ -33,7 +33,7 @@ def test_calculator_emissions():
     assert breakdown["total"] == 11.5
 
 
-def test_calculator_edge_cases():
+def test_calculator_edge_cases() -> None:
     """Validates boundary inputs, type mismatches, and negative checks in CarbonEngine."""
     engine = CarbonEngine()
 
@@ -58,7 +58,7 @@ def test_calculator_edge_cases():
         engine.calculate_energy_emissions(-5.0)
 
 
-def test_assistant_recommendations():
+def test_assistant_recommendations() -> None:
     """Validates that EcoAssistant returns appropriate context-aware advice based on user profiles."""
     engine = CarbonEngine()
     assistant = EcoAssistant()

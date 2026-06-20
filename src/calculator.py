@@ -21,6 +21,20 @@ DIET_FACTORS = {
 # Grid average electricity factor (kg CO2 per kWh)
 ELECTRICITY_FACTOR = 0.40
 
+# UI to Backend Mapping Constants (Decoupling UI from Data)
+TRANSPORT_MAPPING = {
+    "Driving": "driving",
+    "Public Transit": "public_transit",
+    "Walking/Cycling": "walking_cycling"
+}
+
+DIET_MAPPING = {
+    "Meat-Heavy": "meat_heavy",
+    "Balanced": "balanced",
+    "Vegetarian": "vegetarian",
+    "Vegan": "vegan"
+}
+
 
 class CarbonEngine:
     """
@@ -51,10 +65,7 @@ class CarbonEngine:
         
         normalized_transport = str(transport_type).strip().lower()
         if normalized_transport not in self.commute_factors:
-            raise ValueError(
-                f"Unknown transport type: '{transport_type}'. "
-                f"Supported types: {list(self.commute_factors.keys())}"
-            )
+            raise ValueError(f"Unknown transport type: '{transport_type}'.")
         
         factor = self.commute_factors[normalized_transport]
         return float(distance_km * factor)
@@ -74,10 +85,7 @@ class CarbonEngine:
             
         normalized_diet = diet_type.strip().lower()
         if normalized_diet not in self.diet_factors:
-            raise ValueError(
-                f"Unknown diet type: '{diet_type}'. "
-                f"Supported types: {list(self.diet_factors.keys())}"
-            )
+            raise ValueError(f"Unknown diet type: '{diet_type}'.")
             
         return float(self.diet_factors[normalized_diet])
 
@@ -103,11 +111,7 @@ class CarbonEngine:
         Calculate comprehensive daily emissions breakdown and total.
 
         Args:
-            inputs: Dictionary containing:
-                - 'commute_distance': float/int
-                - 'transport_type': str
-                - 'diet_type': str
-                - 'electricity_kwh': float/int
+            inputs: Dictionary containing 'commute_distance', 'transport_type', 'diet_type', 'electricity_kwh'.
 
         Returns:
             A dictionary with breakdown: commute, diet, energy, and total.
@@ -115,11 +119,10 @@ class CarbonEngine:
         if not isinstance(inputs, dict):
             raise TypeError("Inputs must be a dictionary.")
 
-        # Check for missing keys
         required_keys = ["commute_distance", "transport_type", "diet_type", "electricity_kwh"]
         for key in required_keys:
             if key not in inputs:
-                raise ValueError(f"Missing required input key: '{key}'")
+                raise KeyError(f"Missing required input key: '{key}'")
 
         commute = self.calculate_commute_emissions(inputs["commute_distance"], inputs["transport_type"])
         diet = self.calculate_diet_emissions(inputs["diet_type"])
